@@ -1,42 +1,59 @@
 // Shoot Them Up Game, All Rights Reserved
 
-
 #include "Menu/UI/STULevelItemWidget.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 
-void USTULevelItemWidget::NativeOnInitialized() 
+void USTULevelItemWidget::NativeOnInitialized()
 {
-	Super::NativeOnInitialized();
+    Super::NativeOnInitialized();
 
-	if(LevelSelectButton)
+    if (LevelSelectButton)
     {
-		LevelSelectButton->OnClicked.AddDynamic(this, &USTULevelItemWidget::OnLevelItemClicked);
+        LevelSelectButton->OnClicked.AddDynamic(this, &USTULevelItemWidget::OnLevelItemClicked);
+        LevelSelectButton->OnHovered.AddDynamic(this, &USTULevelItemWidget::OnLevelItemHovered);
+        LevelSelectButton->OnUnhovered.AddDynamic(this, &USTULevelItemWidget::OnLevelItemUnhovered);
     }
 }
 void USTULevelItemWidget::OnLevelItemClicked()
 {
-	OnLevelSelected.Broadcast(LevelData);
+    OnLevelSelected.Broadcast(LevelData);
 }
 void USTULevelItemWidget::SetLevelData(const FLevelData& Data)
 {
-	LevelData = Data;
+    LevelData = Data;
 
-	if(LevelNameTextBlock)
+    if (LevelNameTextBlock)
     {
-		LevelNameTextBlock->SetText(FText::FromName(Data.LevelDisplayName));
+        LevelNameTextBlock->SetText(FText::FromName(Data.LevelDisplayName));
     }
 
-	if(LevelImage)
+    if (LevelImage)
     {
-		LevelImage->SetBrushFromTexture(Data.LevelThumb);
+        LevelImage->SetBrushFromTexture(Data.LevelThumb);
     }
 }
-void USTULevelItemWidget::SetSelected(bool IsSelected)
+void USTULevelItemWidget::SetSelected(bool IsSelected) 
 {
-	if(FrameImage)
+    if(LevelImage)
     {
-		FrameImage->SetVisibility(IsSelected ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+        LevelImage->SetColorAndOpacity(IsSelected ? FLinearColor::Red : FLinearColor::White);
+    }
+}
+
+void USTULevelItemWidget::OnLevelItemHovered()
+{
+    if (FrameImage)
+    {
+        FrameImage->SetVisibility(ESlateVisibility::Visible);
+    }
+}
+
+void USTULevelItemWidget::OnLevelItemUnhovered()
+{
+    if (FrameImage)
+    {
+        FrameImage->SetVisibility(ESlateVisibility::Hidden);
     }
 }
