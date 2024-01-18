@@ -27,6 +27,7 @@ void ASTUBaseCharacter::BeginPlay()
 
     check(HealthComponent);
     check(GetCharacterMovement());
+    check(GetCapsuleComponent());
     check(GetMesh());
 
     OnHealthChanged(HealthComponent->GetHealth(), 0.0f);
@@ -36,10 +37,7 @@ void ASTUBaseCharacter::BeginPlay()
     LandedDelegate.AddDynamic(this, &ASTUBaseCharacter::OnGroundLanded);
 }
 
-void ASTUBaseCharacter::OnHealthChanged(float Health, float HealthDelta)
-{
-
-}
+void ASTUBaseCharacter::OnHealthChanged(float Health, float HealthDelta) {}
 
 void ASTUBaseCharacter::Tick(float DeltaTime)
 {
@@ -67,9 +65,10 @@ void ASTUBaseCharacter::OnDeath()
     // PlayAnimMontage(DeathAnimMontage);
     GetCharacterMovement()->DisableMovement();
     SetLifeSpan(LifeSpanOnDeath);
-  
+
     GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     WeaponComponent->StopFire();
+    WeaponComponent->Zoom(false);
 
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     GetMesh()->SetSimulatePhysics(true);
@@ -82,8 +81,8 @@ void ASTUBaseCharacter::OnGroundLanded(const FHitResult& Hit)
     const auto FallVelocityZ = -GetVelocity().Z;
     if (FallVelocityZ < LandedDamageVelocity.X) return;
 
-    const auto FallDamage = FMath::GetMappedRangeValueClamped(LandedDamageVelocity, LandedDamage, -FallVelocityZ);
-    TakeDamage(FallDamage, FDamageEvent{}, nullptr, nullptr);
+    const auto FallDamage = FMath::GetMappedRangeValueClamped(LandedDamageVelocity, LandedDamage, FallVelocityZ);
+    TakeDamage(FallDamage, FPointDamageEvent{}, nullptr, nullptr);
 
     UE_LOG(LogBaseCharacter, Display, TEXT("Player %s recived landed damage: %f"), *GetName(), FallDamage);
 }
@@ -94,4 +93,17 @@ void ASTUBaseCharacter::SetPlayerColor(const FLinearColor& Color)
     if (!MaterialInst) return;
 
     MaterialInst->SetVectorParameterValue(MaterialColorName, Color);
+}
+
+void ASTUBaseCharacter::TurnOff()
+{
+    WeaponComponent->StopFire();
+    WeaponComponent->Zoom(false);
+    Super::TurnOff();
+}
+void ASTUBaseCharacter::Reset()
+{
+    WeaponComponent->StopFire();
+    WeaponComponent->Zoom(false);
+    Super::Reset();
 }

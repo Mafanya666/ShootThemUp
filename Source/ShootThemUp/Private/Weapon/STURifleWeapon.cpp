@@ -84,7 +84,9 @@ void ASTURifleWeapon::MakeDamage(const FHitResult& HitResult)
     const auto DamagedActor = HitResult.GetActor();
     if (!DamagedActor) return;
 
-    DamagedActor->TakeDamage(DamageAmount, FDamageEvent(), GetController(), this);
+    FPointDamageEvent PointDamageEvent;
+    PointDamageEvent.HitInfo = HitResult;
+    DamagedActor->TakeDamage(DamageAmount, PointDamageEvent, GetController(), this);
 }
 
 void ASTURifleWeapon::InitFX()
@@ -94,7 +96,7 @@ void ASTURifleWeapon::InitFX()
         MuzzleFXComponent = SpawnMuzzleFX();
     }
 
-    if(!FireAudioComnponent)
+    if (!FireAudioComnponent)
     {
         FireAudioComnponent = UGameplayStatics::SpawnSoundAttached(FireSound, WeaponMesh, MuzzleSocketName);
     }
@@ -109,7 +111,7 @@ void ASTURifleWeapon::SetFXActive(bool IsActive)
         MuzzleFXComponent->SetVisibility(IsActive, true);
     }
 
-    if(FireAudioComnponent)
+    if (FireAudioComnponent)
     {
         IsActive ? FireAudioComnponent->Play() : FireAudioComnponent->Stop();
     }
@@ -128,4 +130,17 @@ AController* ASTURifleWeapon::GetController() const
 {
     const auto Pawn = Cast<APawn>(GetOwner());
     return Pawn ? Pawn->GetController() : nullptr;
+}
+
+void ASTURifleWeapon::Zoom(bool Enabled)
+{
+    const auto Controller = Cast<APlayerController>(GetController());
+    if (!Controller || !Controller->PlayerCameraManager) return;
+
+    if(Enabled)
+    {
+        DefaultCameraFOV = Controller->PlayerCameraManager->GetFOVAngle();
+    }
+
+    Controller->PlayerCameraManager->SetFOV(Enabled ? FOVZoomAngle : DefaultCameraFOV);
 }
